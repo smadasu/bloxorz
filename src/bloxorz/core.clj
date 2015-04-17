@@ -44,19 +44,15 @@
          (= (aget terrain x2 y2) \T)))
 
 (defn get-valid-moves
-  [block]
-  (filter #(is-block-valid? (second %))
-          (reduce (fn [the-map direction]
-                    (assoc the-map direction (move block direction))) {} ["right" "left" "up" "down"])))
+  [moves-till-now]
+  (mapcat
+    (fn [{:keys [moves blocks]}]
+    (for [direction ["right" "left" "up" "down"]
+          :let [moved-block (move (first blocks) direction)]
+          :when 
+          (and (is-block-valid? moved-block) 
+               (not (contains? (set blocks) moved-block)))]
+      (when (not= block moved-block)
+      {:moves (cons direction moves) :blocks (cons moved-block blocks)}))) moves-till-now))
 
-(get-valid-moves start-position)
-
-(defn get-moves
-  [blocks-till-now]
-  (map #(cons % blocks-till-now) 
-       (filter #(and (is-block-valid? %) (not (contains? (set blocks-till-now) %)))
-               (map #(move % (first blocks-till-now)) ["right" "left" "up" "down"]))))
-(map get-moves (get-moves (list start-position)))
-(map #((assoc {} % (move % start-position))) ["right" "left" "up" "down"])
-
-
+(get-valid-moves (get-valid-moves (get-valid-moves (list {:moves [""] :blocks [start-position]}))))
