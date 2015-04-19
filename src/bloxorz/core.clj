@@ -4,12 +4,12 @@
 
 (def terrain
   (to-array-2d
-    ["TTT       "
-     "TTTTTT    "
-     "TTTTTTTTT "
-     " TTTTTTTTT"
-     "     TT TT"
-     "      TTT "]))
+    ["VVV       "
+     "VVVVVV    "
+     "VVVVVVVVV "
+     " VVVVVVVVV"
+     "     VVTVV"
+     "      VVV "]))
 
 (defrecord block [x1 y1 x2 y2])
 
@@ -17,45 +17,43 @@
 (def target-location (block. 4 7 4 7))
 
 (defn move
-  [{:keys [x1 y1 x2 y2]} direction]
+  [{:keys [x1 y1 x2 y2] :as block} direction]
   (let [is-standing? (and (== x1 x2) (== y1 y2))
         is-in-same-row? (== x1 x2)]
-  (cond
-        (= direction "right") 
-          (if is-standing? (block. x1 (inc y1) x2 (+ y2 2))
-            (if is-in-same-row? (block. x1 (+ y1 2) x2 (inc y2))
-              (block. x1 (inc y1) x2 (inc y2))))
-        (= direction "left") 
-          (if is-standing? (block. x1 (- y1 2) x2 (dec y2))
-            (if is-in-same-row? (block. x1 (dec y1) x2 (- y2 2))
-              (block. x1 (dec y1) x2 (dec y2))))
-        (= direction "up") 
-          (if is-standing? (block. (- x1 2) y1 (dec x2) y2)
-            (if is-in-same-row? (block. (dec x1) y1 (dec x2) y2)
-              (block. (dec x1) y1 (- x2 2) y2)))
-        (= direction "down") 
-          (if is-standing? (block. (inc x1) y1 (+ x2 2) y2)
-            (if is-in-same-row? (block. (inc x1) y1 (inc x2) y2)
-              (block. (+ x1 2) y1 (inc x2) y2)))
-        :else block)))
-(map #(move start-position %)["right" "left" "up" "down"])
-(map #(move start-position %)["right" "right" "right" "down"])
-(map #(move (block. (cell. 2 1) (cell. 3 1)) %)["right" "left" "up" "down"])
-(move (block. (cell. 1 2) (cell. 1 3)) "right")
-
+    (cond
+      (= direction "right") 
+      (if is-standing? (assoc block :y1 (inc y1) :y2 (+ y2 2))
+        (if is-in-same-row? (assoc block :y1 (+ y1 2) :y2 (inc y2))
+          (assoc block :y1 (inc y1) :y2 (inc y2))))
+      (= direction "left") 
+      (if is-standing? (assoc block :y1 (- y1 2) :y2 (dec y2))
+        (if is-in-same-row? (assoc block :y1 (dec y1) :y2 (- y2 2))
+          (assoc block :y1 (dec y1) :y2 (dec y2))))
+      (= direction "up") 
+      (if is-standing? (assoc block :x1 (- x1 2) :x2 (dec x2))
+        (if is-in-same-row? (assoc block :x1 (dec x1) :x2 (dec x2))
+          (assoc block :x1 (dec x1) :x2 (- x2 2))))
+      (= direction "down") 
+      (if is-standing? (assoc block :x1 (inc x1) :x2 (+ x2 2))
+        (if is-in-same-row? (assoc block :x1 (inc x1) :x2 (inc x2))
+          (assoc block :x1 (+ x1 2) :x2 (inc x2))))
+      :else block)))
 
 (defn is-block-valid?
   [{:keys [x1 y1 x2 y2]}]
   (try
-    (and (> x1 0) (> y1 0) (> x2 0) (> y2 0) 
-         (= (aget terrain x1 y1) \T)
-         (= (aget terrain x2 y2) \T))
+    (and (> x1 0) (> y1 0) 
+         (> x2 0) (> y2 0) 
+         (< x1 6) (< x2 6)
+         (< y1 10) (< y2 10)
+         (not= (aget terrain x1 y1) \space)
+         (not= (aget terrain x2 y2) \space))
  (catch Exception e (str "caught exception: " (.printStackTrace e)))))
 
 (defn get-next-moves
   [moves-till-now]
   (mapcat
-    (fn [{:keys [moves blocks]}]
+    (fn [{:keys [moves blocks] :as till-now}]
       (for [direction ["right" "left" "up" "down"]
             :let [moved-block (move (first blocks) direction)]
             :when 
@@ -63,16 +61,23 @@
                  (not (contains? (set blocks) moved-block)))]
         {:moves (cons direction moves) :blocks (cons moved-block blocks)})) moves-till-now))
 
+(defn target-reached
+  [blocks]
+  (not-empty (filter #(contains? (set (second (second %))) target-location) blocks)))
+
 (defn get-valid-moves
   [moves-till-now]
   (let [next-moves (get-next-moves moves-till-now)]
     next-moves
-    ;(if (empty? next-moves) moves-till-now
+    ;(if (target-reached moves-till-now) moves-till-now
       ;(get-valid-moves next-moves))
     ))
+(get-valid-moves (list {:moves [""] :blocks [start-position]}))
+(target-reached (get-next-moves (list {:moves [""] :blocks [start-position]})))
+;(target-reached (list {:moves [""] :blocks [start-position]}))
+;(map #(reverse (:moves %)) (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (list {:moves [""] :blocks [start-position]}))))))
 
-(map #(reverse (:moves %)) (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (list {:moves [""] :blocks [start-position]}))))))
+(map #(reverse (:moves %)) (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (list {:moves [""] :blocks [start-position]}))))))))))
+(filter #(= target-location %) (set (map #(:blocks %) (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (list {:moves [""] :blocks [start-position]}))))))))))))))))))))))))))
 
-(reduce move start-position  ["down" "up"])
-(reduce move start-position  ["right" "right" "right"])
-(move (move (block. (cell. 2 2) (cell. 3 2)) "up") "down")
+;(filter #(contains? (set (second (second %))) target-location) (get-valid-moves (get-valid-moves (list {:moves [""] :blocks [start-position]}))))
