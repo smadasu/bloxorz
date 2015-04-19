@@ -11,10 +11,8 @@
      "     VVTVV"
      "      VVV "]))
 
-(defrecord block [x1 y1 x2 y2])
-
-(def start-position (block. 1 1 1 1))
-(def target-location (block. 4 7 4 7))
+(def start {:x1 1 :y1 1 :x2 1 :y2 1})
+(def target {:x1 4 :y1 7 :x2 4 :y2 7})
 
 (defn move
   [{:keys [x1 y1 x2 y2] :as block} direction]
@@ -41,14 +39,12 @@
 
 (defn is-block-valid?
   [{:keys [x1 y1 x2 y2]}]
-  (try
-    (and (> x1 0) (> y1 0) 
-         (> x2 0) (> y2 0) 
-         (< x1 6) (< x2 6)
-         (< y1 10) (< y2 10)
-         (not= (aget terrain x1 y1) \space)
-         (not= (aget terrain x2 y2) \space))
- (catch Exception e (str "caught exception: " (.printStackTrace e)))))
+  (and (> x1 0) (> y1 0) 
+       (> x2 0) (> y2 0) 
+       (< x1 6) (< x2 6)
+       (< y1 10) (< y2 10)
+       (not= (aget terrain x1 y1) \space)
+       (not= (aget terrain x2 y2) \space)))
 
 (defn get-next-moves
   [moves-till-now]
@@ -63,7 +59,7 @@
 
 (defn target-reached
   [blocks]
-  (not-empty (filter #(contains? (set (second (second %))) target-location) blocks)))
+  (not-empty (filter #(contains? (set (second (second %))) target) blocks)))
 
 (defn get-valid-moves
   [moves-till-now]
@@ -72,12 +68,12 @@
     ;(if (target-reached moves-till-now) moves-till-now
       ;(get-valid-moves next-moves))
     ))
-(get-valid-moves (list {:moves [""] :blocks [start-position]}))
-(target-reached (get-next-moves (list {:moves [""] :blocks [start-position]})))
-;(target-reached (list {:moves [""] :blocks [start-position]}))
-;(map #(reverse (:moves %)) (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (list {:moves [""] :blocks [start-position]}))))))
+(get-valid-moves (list {:moves [""] :blocks [start]}))
+;(target-reached (get-next-moves (list {:moves [""] :blocks [start]})))
+;(target-reached (list {:moves [""] :blocks [start]}))
+;(map #(reverse (:moves %)) (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (list {:moves [""] :blocks [start]}))))))
 
-(map #(reverse (:moves %)) (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (list {:moves [""] :blocks [start-position]}))))))))))
-(filter #(= target-location %) (set (map #(:blocks %) (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (list {:moves [""] :blocks [start-position]}))))))))))))))))))))))))))
+;(map #(reverse (:moves %)) (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (list {:moves [""] :blocks [start]}))))))))))
+;(filter #(= target %) (set (map #(:blocks %) (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (list {:moves [""] :blocks [start]}))))))))))))))))))))))))))
 
-;(filter #(contains? (set (second (second %))) target-location) (get-valid-moves (get-valid-moves (list {:moves [""] :blocks [start-position]}))))
+;(filter #(contains? (set (second (second %))) target) (get-valid-moves (get-valid-moves (list {:moves [""] :blocks [start]}))))
