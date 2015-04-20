@@ -10,7 +10,7 @@
      " VVVVVVVVV"
      "     VVTVV"
      "      VVV "]))
-
+(def ^:const all-possible-directions ["right" "left" "up" "down"])
 (def start {:x1 1 :y1 1 :x2 1 :y2 1})
 (def target {:x1 4 :y1 7 :x2 4 :y2 7})
 
@@ -47,33 +47,12 @@
        (not= (aget terrain x2 y2) \space)))
 
 (defn get-next-moves
-  [moves-till-now]
-  (mapcat
-    (fn [{:keys [moves blocks] :as till-now}]
-      (for [direction ["right" "left" "up" "down"]
-            :let [moved-block (move (first blocks) direction)]
-            :when 
-            (and (is-block-valid? moved-block) 
-                 (not (contains? (set blocks) moved-block)))]
-        {:moves (cons direction moves) :blocks (cons moved-block blocks)})) moves-till-now))
+  [{:keys [moves blocks]}]
+  (for [direction all-possible-directions
+        :let [moved-block (move (first blocks) direction)]
+        :when 
+        (and (is-block-valid? moved-block) 
+             (not (contains? (set blocks) moved-block)))]
+    {:moves (cons direction moves) :blocks (cons moved-block blocks)}))
 
-(defn target-reached
-  [blocks]
-  (not-empty (filter #(contains? (set (second (second %))) target) blocks)))
-
-(defn get-valid-moves
-  [moves-till-now]
-  (let [next-moves (get-next-moves moves-till-now)]
-    next-moves
-    ;(if (target-reached moves-till-now) moves-till-now
-      ;(get-valid-moves next-moves))
-    ))
-(get-valid-moves (list {:moves [""] :blocks [start]}))
-;(target-reached (get-next-moves (list {:moves [""] :blocks [start]})))
-;(target-reached (list {:moves [""] :blocks [start]}))
-;(map #(reverse (:moves %)) (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (list {:moves [""] :blocks [start]}))))))
-
-;(map #(reverse (:moves %)) (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (list {:moves [""] :blocks [start]}))))))))))
-;(filter #(= target %) (set (map #(:blocks %) (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (get-valid-moves (list {:moves [""] :blocks [start]}))))))))))))))))))))))))))
-
-;(filter #(contains? (set (second (second %))) target) (get-valid-moves (get-valid-moves (list {:moves [""] :blocks [start]}))))
+(mapcat get-next-moves (mapcat get-next-moves (list {:moves () :blocks #{start}})))
