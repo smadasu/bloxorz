@@ -1,4 +1,5 @@
 (ns bloxorz.core
+  (:require [clojure.pprint :refer :all])
   (:gen-class))
 
 (def terrain
@@ -85,11 +86,13 @@
                       (move-down current-block) 
                       (move-up current-block)))))
 
-(pprint
+(defn -main
+  [& args]
+  (pprint
   (loop [current-status (list {:previous-blocks #{} :current-moves '() :current-block block})]
     (if (some target-reached? (map :current-block current-status))
       (map :current-moves (filter 
                             (fn [status]
                               (target-reached? (:current-block status)))
                             current-status))
-      (recur (mapcat get-all-valid-moves current-status)))))
+      (recur (mapcat get-all-valid-moves current-status))))))
